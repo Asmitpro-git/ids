@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}Packet Analysis | SafeWeb IDS{% endblock %}
+{% block content %}
+<h1 class="mb-4 text-center animate-slideUp cyber-title" style="font-weight:700;">
+    <i class="fas fa-search me-2"></i>Packet Analysis
+</h1>
+
+<div class="row mb-4 g-3">
+    {% set cards = [
+        ('Total Packets', summary.total_packets, 'primary'),
+        ('Threats Detected', summary.threats_detected, 'warning'),
+        ('ML Anomalies', summary.ml_anomalies, 'danger'),
+        ('Protocols', summary.protocols, 'info')
+    ] %}
+    {% for title, value, color in cards %}
+    <div class="col-md-3">
+        <div class="card metric-card accent-{{color}} text-white shadow animate-fadeIn">
+            <div class="card-body text-center">
+                <h5 class="card-title">{{ title }}</h5>
+                <p class="display-6" id="metric-{{ loop.index0 }}">{{ value }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+// Auto-refresh metrics every 3 seconds
+function updateMetrics() {
+    fetch('/api/packet-analysis-summary')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('metric-0').textContent = data.total_packets || 0;
+            document.getElementById('metric-1').textContent = data.threats_detected || 0;
+            document.getElementById('metric-2').textContent = data.ml_anomalies || 0;
+            document.getElementById('metric-3').textContent = data.protocols || 'N/A';
+        })
+        .catch(err => console.error('Error updating metrics:', err));
+}
+setInterval(updateMetrics, 3000);
+updateMetrics(); // Initial load
+</script>
+
+<div class="card mb-4 shadow animate-slideUp glass-panel">
+    <div class="card-body">
+        <h4 class="card-title mb-3 text-center"><i class="fas fa-chart-pie me-2"></i>Protocol Distribution</h4>
+        <canvas id="protocolChart" height="120"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+    const data=JSON.parse('{{ summary.protocol_counts | tojson | safe }}');
+    const ctx=document.getElementById('protocolChart').getContext('2d');
+    const labels=Object.keys(data), vals=Object.values(data);
+    const colors=['#00eaff','#7c3aed','#38bdf8','#22c55e','#fbbf24','#f472b6','#a855f7','#06b6d4','#67e8f9','#f43f5e'];
+    new Chart(ctx,{type:'pie',data:{labels,datasets:[{data:vals,backgroundColor:colors,borderColor:'#fff',borderWidth:2}]},
+        options:{plugins:{legend:{position:'bottom'}},animation:{duration:1500,easing:'easeOutBounce'}}});
+});
+</script>
+
+<form method="get" class="row g-3 mb-4 align-items-end animate-fadeIn glass-panel p-3">
+    <div class="col-md-3">
+        <label for="protocol" class="form-label">Protocol</label>
+        <select class="form-select" name="protocol" id="protocol">
+            <option value="">All</option>
+            {% for p in ['TCP','UDP','ICMP','Other'] %}
+            <option value="{{p}}" {% if request.args.get('protocol')==p %}selected{% endif %}>{{p}}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label for="threat" class="form-label">Threat Level</label>
+        <select class="form-select" name="threat" id="threat">
+            <option value="">All</option>
+            <option value="1" {% if request.args.get('threat')=='1' %}selected{% endif %}>Threat</option>
+            <option value="0" {% if request.args.get('threat')=='0' %}selected{% endif %}>Safe</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label for="ip_search" class="form-label">Search IP</label>
+        <input type="text" class="form-control" name="ip_search" id="ip_search"
+               placeholder="e.g. 192.168.1.10" value="{{ request.args.get('ip_search','') }}">
+    </div>
+    <div class="col-md-2 d-grid">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i>Filter</button>
+    </div>
+</form>
+
+<div class="card shadow animate-slideUp glass-panel">
+    <div class="card-body">
+        <h4 class="card-title mb-3 text-center"><i class="fas fa-table me-2"></i>Analyzed Packets</h4>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Timestamp</th><th>Source IP</th><th>Dest IP</th>
+                        <th>Protocol</th><th>Length</th><th>Threat</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pkt in packets %}
+                    <tr>
+                        <td><div class="animate__animated animate__fadeIn" style="animation-delay:{{ (loop.index0 * 0.05)|round(2) }}s;">{{ pkt.timestamp }}</div></td>
+                        <td>{{ pkt.src_ip }}</td>
+                        <td>{{ pkt.dst_ip }}</td>
+                        <td>{{ pkt.protocol }}</td>
+                        <td>{{ pkt.packet_size }}</td>
+                        <td>
+                            {% if pkt.threat %}
+                            <span class="badge bg-danger">Threat</span>
+                            {% else %}
+                            <span class="badge bg-success">Safe</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center">No packets</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

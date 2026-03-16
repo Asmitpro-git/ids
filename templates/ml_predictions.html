@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block title %}ML Predictions | SafeWeb IDS{% endblock %}
+{% block content %}
+<h1 class="mb-4 text-center animate-slideUp cyber-title"><i class="fas fa-brain me-2"></i>ML Predictions</h1>
+
+<div class="row mb-4 g-3 justify-content-center">
+    <div class="col-md-4">
+        <div class="card metric-card accent-primary text-white shadow animate-fadeIn">
+            <div class="card-body text-center">
+                <h5>Anomaly Count</h5><p class="display-6" id="anomaly-count">{{ summary.anomaly_counts.Anomaly|default(0) }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card metric-card accent-success text-white shadow animate-fadeIn">
+            <div class="card-body text-center">
+                <h5>Normal Count</h5><p class="display-6" id="normal-count">{{ summary.anomaly_counts.Normal|default(0) }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4 shadow animate-slideUp glass-panel">
+    <div class="card-body">
+        <h4 class="card-title mb-3 text-center"><i class="fas fa-chart-doughnut me-2"></i>Anomaly vs Normal</h4>
+        <canvas id="anomalyChart" height="120"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let anomalyChart;
+document.addEventListener('DOMContentLoaded',()=>{
+    const data=JSON.parse('{{ summary.anomaly_counts | default({"Anomaly":0,"Normal":0}) | tojson | safe }}');
+    const ctx=document.getElementById('anomalyChart').getContext('2d');
+    const lbl=Object.keys(data), vals=Object.values(data);
+    anomalyChart = new Chart(ctx,{type:'doughnut',data:{labels:lbl,datasets:[{data:vals,backgroundColor:['#f43f5e','#22c55e'],borderColor:'#0b1224',borderWidth:2}]},
+        options:{plugins:{legend:{position:'bottom'}},animation:{duration:1500,easing:'easeOutQuart'}}});
+    
+    // Auto-refresh every 3 seconds
+    setInterval(updateMLData, 3000);
+});
+
+function updateMLData() {
+    fetch('/api/ml-predictions-summary')
+        .then(r => r.json())
+        .then(data => {
+            const counts = data.anomaly_counts || {Anomaly: 0, Normal: 0};
+            document.getElementById('anomaly-count').textContent = counts.Anomaly || 0;
+            document.getElementById('normal-count').textContent = counts.Normal || 0;
+            
+            if (anomalyChart) {
+                anomalyChart.data.datasets[0].data = [counts.Anomaly || 0, counts.Normal || 0];
+                anomalyChart.update();
+            }
+        })
+        .catch(err => console.error('Error updating ML data:', err));
+}
+</script>
+
+<form method="get" class="row g-3 mb-4 align-items-end animate-fadeIn glass-panel p-3">
+    <div class="col-md-4">
+        <label for="protocol" class="form-label">Protocol</label>
+        <select class="form-select" name="protocol" id="protocol">
+            <option value="">All</option>
+            {% for p in ['TCP','UDP','ICMP','Other'] %}
+            <option value="{{p}}" {% if request.args.get('protocol')==p %}selected{% endif %}>{{p}}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label for="ip_search" class="form-label">IP Search</label>
+        <input type="text" class="form-control" name="ip_search" id="ip_search"
+               placeholder="e.g. 192.168.1.10" value="{{ request.args.get('ip_search','') }}">
+    </div>
+    <div class="col-md-2 d-grid">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i>Filter</button>
+    </div>
+</form>
+
+<div class="row mb-2 justify-content-end">
+    <div class="col-auto">
+        <button class="btn btn-outline-success w-100" onclick="downloadCSV()"><i class="fas fa-download me-1"></i>CSV</button>
+    </div>
+</div>
+
+<div class="card shadow animate-slideUp glass-panel">
+    <div class="card-body">
+        <h4 class="card-title mb-3 text-center"><i class="fas fa-table me-2"></i>Predictions Table</h4>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Timestamp</th><th>Source IP</th><th>Dest IP</th>
+                        <th>Protocol</th><th>Label</th><th>Confidence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pred in predictions %}
+                    <tr class="animate__animated animate__fadeIn" style="animation-delay:{{ loop.index0 * 0.04 }}s;">
+                        <td>{{ pred.timestamp }}</td>
+                        <td>{{ pred.src_ip }}</td>
+                        <td>{{ pred.dst_ip }}</td>
+                        <td>{{ pred.protocol }}</td>
+                        <td>
+                            {% if pred.label == 'Anomaly' %}
+                            <span class="badge bg-danger">Anomaly</span>
+                            {% else %}
+                            <span class="badge bg-success">Normal</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ "%.2f"|format(pred.confidence) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center">No predictions</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function downloadCSV(){
+    const preds={{ predictions | default([]) | tojson | safe }};
+    if(!preds.length){alert('Nothing to export');return;}
+    const headers=['Timestamp','Source IP','Destination IP','Protocol','Label','Confidence'];
+    let csv = headers.join(',')+'\n';
+    preds.forEach(p=>csv+=`"${p.timestamp}","${p.src_ip}","${p.dst_ip}","${p.protocol}","${p.label}","${p.confidence}"\n`);
+    const blob=new Blob([csv],{type:'text/csv'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='ml_predictions.csv'; a.click();
+}
+</script>
+{% endblock %}

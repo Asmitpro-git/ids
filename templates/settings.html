@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block title %}Settings | SafeWeb IDS{% endblock %}
+{% block content %}
+<h1 class="mb-4 text-center animate-slideUp cyber-title"><i class="fas fa-cog me-2"></i>Settings</h1>
+
+<div class="row mb-4 g-3 justify-content-center">
+    {% set cards = [
+        ('IDS Thresholds', f"DDoS: {thresholds.ddos_packet_count}<br>Port Scan: {thresholds.port_scan_ports}<br>Brute Force: {thresholds.brute_force_post_count}", 'primary'),
+        ('Suspicious Domains', f"{suspicious_domains|length} domain(s)", 'info'),
+        ('ML Model', ml_model_status, 'success')
+    ] %}
+    {% for title, body, color in cards %}
+    <div class="col-md-4">
+        <div class="card metric-card accent-{{color}} text-white shadow animate-fadeIn">
+            <div class="card-body text-center"><h5>{{title}}</h5><p class="small" style="line-height:1.4;">{{ body|safe }}</p></div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card shadow animate-slideUp glass-panel">
+    <div class="card-body">
+        <h4 class="card-title mb-3 text-center"><i class="fas fa-sliders-h me-2"></i>Update Configuration</h4>
+        <form method="post" class="row g-3" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="col-md-4">
+                <label class="form-label">DDoS Packets</label>
+                <input type="number" class="form-control" name="ddos_packet_count"
+                       value="{{ thresholds.ddos_packet_count }}" min="1">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Port Scan Ports</label>
+                <input type="number" class="form-control" name="port_scan_ports"
+                       value="{{ thresholds.port_scan_ports }}" min="1">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Brute-Force POSTs</label>
+                <input type="number" class="form-control" name="brute_force_post_count"
+                       value="{{ thresholds.brute_force_post_count }}" min="1">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Notification Email</label>
+                <input type="email" class="form-control" name="notification_email"
+                       value="{{ notification_email }}" placeholder="admin@example.com">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">ML Model</label>
+                <select class="form-select" name="ml_model">
+                    {% for m in ['isolation_forest','random_forest','svm'] %}
+                    <option value="{{m}}" {% if ml_model==m %}selected{% endif %}>{{m|replace('_',' ')|title}}</option>
+                    {% endfor %}
+                </select>
+                <hr>
+                <label class="form-label mt-2">Upload .pkl Model</label>
+                <input type="file" class="form-control" name="model_file" accept=".pkl">
+                <div class="d-flex gap-2 mt-2">
+                    <button type="submit" name="upload_model" value="1" class="btn btn-outline-info flex-fill"><i class="fas fa-upload me-1"></i>Upload</button>
+                    <button type="submit" name="retrain_model" value="1" class="btn btn-outline-success flex-fill"><i class="fas fa-sync me-1"></i>Retrain</button>
+                </div>
+            </div>
+
+            <div class="col-12 d-grid gap-2">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save Settings</button>
+                <button type="submit" name="restore_defaults" value="1"
+                        class="btn btn-outline-warning"><i class="fas fa-undo me-1"></i>Restore Defaults</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow animate-slideUp mt-4 glass-panel">
+    <div class="card-body">
+        <h4 class="card-title mb-3 text-center"><i class="fas fa-user me-2"></i>User Authentication</h4>
+        <ul class="nav nav-tabs mb-3" id="authTabSettings" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="login-tab-settings" data-bs-toggle="tab"
+                        data-bs-target="#login-settings" type="button" role="tab">Login</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="register-tab-settings" data-bs-toggle="tab"
+                        data-bs-target="#register-settings" type="button" role="tab">Register</button>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <!-- Login -->
+            <div class="tab-pane fade show active" id="login-settings" role="tabpanel">
+                <form method="post" action="{{ url_for('login') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="username_settings" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username_settings" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password_settings" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password_settings" name="password" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt me-2"></i>Login</button>
+                    </div>
+                </form>
+            </div>
+            <!-- Register -->
+            <div class="tab-pane fade" id="register-settings" role="tabpanel">
+                <form method="post" action="{{ url_for('login') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="new_username_settings" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="new_username_settings" name="new_username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password_settings" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="new_password_settings" name="new_password" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" name="register" value="1" class="btn btn-success">
+                            <i class="fas fa-user-plus me-2"></i>Register
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, msg in messages %}
+              <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} mt-3 animate__animated animate__fadeIn">{{ msg }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+    </div>
+</div>
+{% endblock %}

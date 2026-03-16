@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}Visualizations | SafeWeb IDS{% endblock %}
+{% block content %}
+<h1 class="mb-4 text-center animate-slideUp cyber-title" style="font-weight:700;">
+    <i class="fas fa-chart-line me-2"></i>Visualizations
+</h1>
+
+<div class="row mb-4 g-3 justify-content-center">
+    {% set cards = [('Total Packets',summary.total_packets,'primary','total_packets'),('Threats',summary.threats_detected,'danger','threats_detected'),('ML Anomalies',summary.ml_anomalies,'info','ml_anomalies')] %}
+    {% for title,val,color,key in cards %}
+    <div class="col-md-4">
+        <div class="card metric-card accent-{{color}} text-white shadow animate-fadeIn">
+        <div class="card-body text-center"><h5>{{title}}</h5><p class="display-6" data-metric="{{ key }}">{{val}}</p></div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<form method="get" class="row g-3 mb-4 align-items-end animate-fadeIn glass-panel p-3">
+    <div class="col-md-3">
+        <label for="date_start" class="form-label">Start</label>
+        <input type="date" class="form-control" name="date_start" id="date_start" value="{{ request.args.get('date_start','') }}">
+    </div>
+    <div class="col-md-3">
+        <label for="date_end" class="form-label">End</label>
+        <input type="date" class="form-control" name="date_end" id="date_end" value="{{ request.args.get('date_end','') }}">
+    </div>
+    <div class="col-md-2">
+        <label for="protocol" class="form-label">Protocol</label>
+        <select class="form-select" name="protocol" id="protocol">
+            <option value="">All</option>
+            {% for p in ['TCP','UDP','ICMP','Other'] %}
+            <option value="{{p}}" {% if request.args.get('protocol')==p %}selected{% endif %}>{{p}}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2 d-grid">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i>Apply</button>
+    </div>
+</form>
+
+<div class="row mb-4 g-3">
+    <div class="col-lg-6"><div class="card shadow animate-slideUp glass-panel">
+        <div class="card-body"><h4 class="card-title text-center mb-3"><i class="fas fa-chart-line me-2"></i>Traffic Over Time</h4>
+            <canvas id="trafficChart" height="120"></canvas></div>
+    </div></div>
+    <div class="col-lg-6"><div class="card shadow animate-slideUp glass-panel">
+        <div class="card-body"><h4 class="card-title text-center mb-3"><i class="fas fa-chart-pie me-2"></i>Protocol Distribution</h4>
+            <canvas id="protocolChart" height="120"></canvas></div>
+    </div></div>
+</div>
+
+<div class="row mb-4 g-3">
+    <div class="col-lg-6"><div class="card shadow animate-slideUp glass-panel">
+        <div class="card-body"><h4 class="card-title text-center mb-3"><i class="fas fa-exclamation-triangle me-2"></i>Threat Timeline</h4>
+            <canvas id="threatChart" height="120"></canvas></div>
+    </div></div>
+    <div class="col-lg-6"><div class="card shadow animate-slideUp glass-panel">
+        <div class="card-body"><h4 class="card-title text-center mb-3"><i class="fas fa-brain me-2"></i>ML Anomaly Trend</h4>
+            <canvas id="mlAnomalyChart" height="120"></canvas></div>
+    </div></div>
+</div>
+
+<div class="row mb-4 justify-content-center">
+    <div class="col-auto d-flex flex-wrap gap-2">
+        <a href="/api/export-analysis-history" class="btn btn-outline-info"><i class="fas fa-file-csv me-1"></i>History CSV</a>
+        {% for cid in ['trafficChart','protocolChart','threatChart','mlAnomalyChart'] %}
+        <button class="btn btn-outline-success" onclick="downloadChart('{{cid}}')"><i class="fas fa-image me-1"></i>{{cid|replace('Chart','')|title}}</button>
+        {% endfor %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script id="viz-initial" type="application/json">{{ {
+    'traffic': traffic_data | default({'labels':[],'data':[]} ),
+    'protocol': protocol_data | default({'labels':[],'data':[]} ),
+    'threat': threat_data | default({'labels':[],'data':[]} ),
+    'ml_anomaly': ml_anomaly_data | default({'labels':[],'data':[]} )
+} | tojson | safe }}</script>
+<script>
+function downloadChart(id){
+    const a=document.createElement('a');
+    a.href=document.getElementById(id).toDataURL('image/png');
+    a.download=id+'.png'; a.click();
+}
+
+let trafficChart, protocolChart, threatChart, mlAnomalyChart;
+
+function renderCharts(payload){
+    const t = payload.traffic || {labels:[], data:[]};
+    const p = payload.protocol || {labels:[], data:[]};
+    const th = payload.threat || {labels:[], data:[]};
+    const ml = payload.ml_anomaly || {labels:[], data:[]};
+
+    const trafficCtx=document.getElementById('trafficChart').getContext('2d');
+    const protocolCtx=document.getElementById('protocolChart').getContext('2d');
+    const threatCtx=document.getElementById('threatChart').getContext('2d');
+    const mlCtx=document.getElementById('mlAnomalyChart').getContext('2d');
+
+    if(trafficChart) trafficChart.destroy();
+    if(protocolChart) protocolChart.destroy();
+    if(threatChart) threatChart.destroy();
+    if(mlAnomalyChart) mlAnomalyChart.destroy();
+
+    trafficChart = new Chart(trafficCtx,{
+        type:'line', data:{labels:t.labels, datasets:[{label:'Packets',data:t.data,borderColor:'#00eaff',backgroundColor:'rgba(0,234,255,.12)',tension:.35}]},
+        options:{plugins:{legend:{position:'bottom'}},animation:{duration:1500,easing:'easeOutBounce'}}
+    });
+    protocolChart = new Chart(protocolCtx,{
+        type:'doughnut', data:{labels:p.labels, datasets:[{data:p.data,backgroundColor:['#00eaff','#7c3aed','#38bdf8','#22c55e','#fbbf24','#f472b6'],borderColor:'#0b1224',borderWidth:2}]},
+        options:{plugins:{legend:{position:'bottom'}},animation:{duration:1500,easing:'easeOutQuart'}}
+    });
+    threatChart = new Chart(threatCtx,{
+        type:'bar', data:{labels:th.labels, datasets:[{label:'Threats',data:th.data,backgroundColor:'#f43f5e'}]},
+        options:{plugins:{legend:{display:false}},animation:{duration:1200,easing:'easeOutBack'}}
+    });
+    mlAnomalyChart = new Chart(mlCtx,{
+        type:'line', data:{labels:ml.labels, datasets:[{label:'Anomalies',data:ml.data,borderColor:'#a855f7',backgroundColor:'rgba(168,85,247,.12)',tension:.35}]},
+        options:{plugins:{legend:{position:'bottom'}},animation:{duration:1500,easing:'easeOutBounce'}}
+    });
+}
+
+function loadVisualizationData(){
+    const params = new URLSearchParams();
+    const ds = document.getElementById('date_start').value;
+    const de = document.getElementById('date_end').value;
+    const proto = document.getElementById('protocol').value;
+    if(ds) params.append('date_start', ds);
+    if(de) params.append('date_end', de);
+    if(proto) params.append('protocol', proto);
+    fetch('/api/visualization-data?' + params.toString())
+        .then(r=>r.json())
+        .then(data=>{
+            // Update headline cards
+            document.querySelectorAll('[data-metric="total_packets"]')[0].textContent = data.summary.total_packets || 0;
+            document.querySelectorAll('[data-metric="threats_detected"]')[0].textContent = data.summary.threats_detected || 0;
+            document.querySelectorAll('[data-metric="ml_anomalies"]')[0].textContent = data.summary.ml_anomalies || 0;
+            renderCharts(data);
+        })
+        .catch(err=>console.error('Visualization fetch error:', err));
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+    const initialDataEl = document.getElementById('viz-initial');
+    const initialData = initialDataEl ? JSON.parse(initialDataEl.textContent || '{}') : {};
+    renderCharts(initialData);
+
+    const form = document.querySelector('form');
+    if(form){
+        form.addEventListener('submit', (e)=>{
+            e.preventDefault();
+            loadVisualizationData();
+        });
+    }
+
+    loadVisualizationData();
+    setInterval(loadVisualizationData, 5000);
+});
+</script>
+{% endblock %}

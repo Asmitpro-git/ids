@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizations | SafeWeb IDS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        body { background: #f8fafc; color: #22223b; font-family: 'Inter', Arial, sans-serif; }
+        h1, h4, h5 { color: #22223b; }
+        .card { background: #fff; border-radius: 18px; box-shadow: 0 4px 24px rgba(99,102,241,0.08); }
+        .navbar { background: #fff; color: #22223b; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="#"><i class="fas fa-shield-alt me-2"></i>SafeWeb IDS</a>
+    </div>
+</nav>
+<div class="container">
+    <h1 class="mb-4 text-center animate-slideUp"><i class="fas fa-chart-line me-2"></i>Visualizations</h1>
+    <div id="summary-cards" class="row mb-4 g-3 justify-content-center"></div>
+    <div class="row mb-4 g-3">
+        <div class="col-lg-6"><div class="card shadow animate-slideUp">
+            <div class="card-body"><h4 class="card-title text-center mb-3"><i class="fas fa-chart-line me-2"></i>Traffic Over Time</h4>
+                <canvas id="trafficChart" height="120" aria-label="Traffic Over Time" role="img"></canvas></div>
+        </div></div>
+        <div class="col-lg-6"><div class="card shadow animate-slideUp">
+            <div class="card-body"><h4 class="card-title text-center mb-3"><i class="fas fa-chart-pie me-2"></i>Protocol Distribution</h4>
+                <canvas id="protocolChart" height="120" aria-label="Protocol Distribution" role="img"></canvas></div>
+        </div></div>
+    </div>
+    <div class="row mb-4 g-3">
+        <div class="col-lg-6"><div class="card shadow animate-slideUp">
+            <div class="card-body"><h4 class="card-title text-center mb-3"><i class="fas fa-exclamation-triangle me-2"></i>Threat Timeline</h4>
+                <canvas id="threatChart" height="120" aria-label="Threat Timeline" role="img"></canvas></div>
+        </div></div>
+        <div class="col-lg-6"><div class="card shadow animate-slideUp">
+            <div class="card-body"><h4 class="card-title text-center mb-3"><i class="fas fa-brain me-2"></i>ML Anomaly Trend</h4>
+                <canvas id="mlAnomalyChart" height="120" aria-label="ML Anomaly Trend" role="img"></canvas></div>
+        </div></div>
+    </div>
+    <div class="row mb-4 justify-content-center">
+        <div class="col-auto d-flex flex-wrap gap-2">
+            <button class="btn btn-outline-success" onclick="downloadChart('trafficChart')"><i class="fas fa-image me-1"></i>Traffic</button>
+            <button class="btn btn-outline-success" onclick="downloadChart('protocolChart')"><i class="fas fa-image me-1"></i>Protocol</button>
+            <button class="btn btn-outline-success" onclick="downloadChart('threatChart')"><i class="fas fa-image me-1"></i>Threats</button>
+            <button class="btn btn-outline-success" onclick="downloadChart('mlAnomalyChart')"><i class="fas fa-image me-1"></i>ML Anomaly</button>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+function downloadChart(id){
+    const a=document.createElement('a');
+    a.href=document.getElementById(id).toDataURL('image/png');
+    a.download=id+'.png'; a.click();
+}
+// Fetch summary and chart data from backend API
+fetch('/api/visualizations-summary').then(r=>r.json()).then(summary=>{
+    const cards=[
+        ['Total Packets',summary.total_packets,'primary'],
+        ['Threats',summary.threats_detected,'danger'],
+        ['ML Anomalies',summary.ml_anomalies,'info']
+    ];
+    let html='';
+    for(const [title,val,color] of cards){
+        html+=`<div class="col-md-4"><div class="card bg-${color} text-white shadow animate-fadeIn"><div class="card-body text-center"><h5 style="color:#22223b;">${title}</h5><p class="display-6" style="color:#22223b;">${val}</p></div></div></div>`;
+    }
+    document.getElementById('summary-cards').innerHTML=html;
+});
+fetch('/api/visualizations-data').then(r=>r.json()).then(data=>{
+    new Chart(document.getElementById('trafficChart').getContext('2d'),{
+        type:'line', data:{labels:data.traffic.labels, datasets:[{label:'Packets',data:data.traffic.data,borderColor:'#007bff',backgroundColor:'rgba(0,123,255,.1)',tension:.3}]},
+        options:{plugins:{legend:{position:'bottom'}},animation:{duration:1500,easing:'easeOutBounce'}}
+    });
+    new Chart(document.getElementById('protocolChart').getContext('2d'),{
+        type:'doughnut', data:{labels:data.protocol.labels, datasets:[{data:data.protocol.data,backgroundColor:['#007bff','#28a745','#dc3545','#ffc107'],borderColor:'#fff',borderWidth:2}]},
+        options:{plugins:{legend:{position:'bottom'}},animation:{duration:1500,easing:'easeOutQuart'}}
+    });
+    new Chart(document.getElementById('threatChart').getContext('2d'),{
+        type:'bar', data:{labels:data.threat.labels, datasets:[{label:'Threats',data:data.threat.data,backgroundColor:'#dc3545'}]},
+        options:{plugins:{legend:{display:false}},animation:{duration:1200,easing:'easeOutBack'}}
+    });
+    new Chart(document.getElementById('mlAnomalyChart').getContext('2d'),{
+        type:'line', data:{labels:data.mlAnom.labels, datasets:[{label:'Anomalies',data:data.mlAnom.data,borderColor:'#17a2b8',backgroundColor:'rgba(23,162,184,.1)',tension:.3}]},
+        options:{plugins:{legend:{position:'bottom'}},animation:{duration:1500,easing:'easeOutBounce'}}
+    });
+});
+</script>
+</body>
+</html>

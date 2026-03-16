@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | SafeWeb IDS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        body { background: #f8fafc; color: #22223b; font-family: 'Inter', Arial, sans-serif; }
+        h1, h4, h5 { color: #22223b; }
+        .card { background: #fff; border-radius: 18px; box-shadow: 0 4px 24px rgba(99,102,241,0.08); }
+        .navbar { background: #fff; color: #22223b; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="#"><i class="fas fa-shield-alt me-2"></i>SafeWeb IDS</a>
+    </div>
+</nav>
+<div class="container">
+    <h1 class="display-5 fw-bold mb-0 text-center animate-slideUp" style="color:#22223b;"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h1>
+    <div id="metric-cards" class="row mb-4 g-3"></div>
+    <div class="card mb-4 shadow animate-slideUp">
+        <div class="card-body">
+            <h4 class="card-title mb-3 text-center"><i class="fas fa-history me-2"></i>Recent Analysis</h4>
+            <div class="table-responsive">
+                <div style="max-height:220px; overflow-y:auto; border: 1px solid #e0e0e0; border-radius: 10px; padding: 4px; background: #f9f9fb;">
+                    <table class="table table-striped table-hover align-middle mb-0" id="historyTable" style="font-size:0.95rem;">
+                        <thead class="table-dark">
+                            <tr><th>Timestamp</th><th>File</th><th>Rule Alerts</th><th>ML Predictions</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Saved Captures Section -->
+    <div class="card mb-4 shadow animate-slideUp">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0"><i class="fas fa-save me-2"></i>Saved Captures</h4>
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#savedCapturesCollapse" aria-expanded="true" aria-controls="savedCapturesCollapse">
+                    Show/Hide
+                </button>
+            </div>
+            <div class="collapse show mt-3" id="savedCapturesCollapse">
+                <div id="summary-cards" class="row mb-4 g-3 justify-content-center"></div>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle" id="capturesTable">
+                        <thead class="table-dark">
+                            <tr><th>Filename</th><th>Date</th><th>Size</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+// Saved Captures Section
+fetch('/api/saved-captures-summary').then(r=>r.json()).then(summary=>{
+    const cards=[
+        ['Total Captures',summary.total_captures,'primary'],
+        ['Total Size',summary.total_size,'info'],
+        ['Last Saved',summary.last_saved,'success']
+    ];
+    let html='';
+    for(const [title,val,color] of cards){
+        html+=`<div class="col-md-4"><div class="card bg-${color} text-white shadow animate-fadeIn"><div class="card-body text-center"><h5 style="color:#22223b;">${title}</h5><p class="display-6" style="color:#22223b;">${val}</p></div></div></div>`;
+    }
+    document.getElementById('summary-cards').innerHTML=html;
+});
+function renderCapturesTable(captures){
+    const tbody=document.querySelector('#capturesTable tbody');
+    tbody.innerHTML='';
+    if(!captures.length){
+        tbody.innerHTML='<tr><td colspan="4" class="text-center">No captures</td></tr>';
+        return;
+    }
+    for(const c of captures){
+        tbody.innerHTML+=`<tr><td class="text-break">${c.filename}</td><td>${c.date}</td><td>${c.size}</td><td><a href="/api/download-capture?filename=${encodeURIComponent(c.filename)}" class="btn btn-sm btn-success me-2" title="Download"><i class="fas fa-download"></i></a><button class="btn btn-sm btn-danger" title="Delete" onclick="deleteCapture('${c.filename}')"><i class="fas fa-trash"></i></button></td></tr>`;
+    }
+}
+function fetchCaptures(){
+    fetch('/api/saved-captures-list')
+        .then(r=>r.json())
+        .then(renderCapturesTable);
+}
+function deleteCapture(filename){
+    if(!confirm('Delete '+filename+'?')) return;
+    fetch('/api/delete-capture',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename})})
+        .then(r=>r.json())
+        .then(fetchCaptures);
+}
+fetchCaptures();
+fetch('/api/dashboard-metrics').then(r=>r.json()).then(metrics=>{
+    const cards=[
+        ['Packets Captured',metrics.packets_captured,'success'],
+        ['Rule Threats',metrics.threats_detected,'warning'],
+        ['ML Anomalies',metrics.ml_anomalies,'danger'],
+        ['Security Status',metrics.security_status,'info']
+    ];
+    let html='';
+    for(const [title,val,color] of cards){
+        html+=`<div class="col-md-3"><div class="card bg-${color} text-white shadow animate-fadeIn"><div class="card-body text-center"><h5 style="color:#22223b;">${title}</h5><p class="display-6" style="color:#22223b;">${val}</p></div></div></div>`;
+    }
+    document.getElementById('metric-cards').innerHTML=html;
+});
+fetch('/api/dashboard-history').then(r=>r.json()).then(history=>{
+    const tbody=document.querySelector('#historyTable tbody');
+    tbody.innerHTML='';
+    if(!history.length){
+        tbody.innerHTML='<tr><td colspan="4" class="text-center">No history</td></tr>';
+        return;
+    }
+    for(const entry of history){
+        tbody.innerHTML+=`<tr><td>${entry.timestamp}</td><td>${entry.filename}</td><td>${entry.alerts.length?'<ul class=\"list-unstyled mb-0\">'+entry.alerts.map(a=>'<li><span class=\"badge bg-warning text-dark\">'+a+'</span></li>').join('')+'</ul>':'<span class=\"text-muted\">None</span>'}</td><td>${entry.ml_predictions.length?'<ul class=\"list-unstyled mb-0\">'+entry.ml_predictions.map(p=>'<li><span class=\"badge bg-danger\">'+p+'</span></li>').join('')+'</ul>':'<span class=\"text-muted\">None</span>'}</td></tr>`;
+    }
+});
+</script>
+</body>
+</html>

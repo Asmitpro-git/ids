@@ -1,0 +1,70 @@
+[
+  {
+    "timestamp": "2026-02-27 10:21:48",
+    "filename": "capture_20260227_102122.pcap",
+    "total_packets": 100,
+    "alerts": [
+      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
+      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)"
+    ],
+    "ml_predictions": [
+      "Model not trained. Please train first."
+    ],
+    "protocol_counts": {
+      "TCP": 70,
+      "UDP": 30
+    }
+  },
+  {
+    "timestamp": "2026-02-27 10:23:01",
+    "filename": "capture_20260227_102231.pcap",
+    "total_packets": 100,
+    "alerts": [
+      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
+      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
+      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
+      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)"
+    ],
+    "ml_predictions": [
+      "Model not trained. Please train first."
+    ],
+    "protocol_counts": {
+      "TCP": 75,
+      "UDP": 25
+    }
+  },
+  {
+    "timestamp": "2026-02-27 10:48:04",
+    "filename": "capture_20260227_104755.pcap",
+    "total_packets": 100,
+    "alerts": [
+      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
+      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
+      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)"
+    ],
+    "ml_predictions": [
+      "Model not trained. Please train first."
+    ],
+    "protocol_counts": {
+      "TCP": 72,
+      "UDP": 28
+    }
+  },
+  {
+    "timestamp": "2026-02-27 10:50:13",
+    "filename": "capture_20260227_105000.pcap",
+    "total_packets": 100,
+    "alerts": [
+      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
+      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
+      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)"
+    ],
+    "ml_predictions": [
+      "Model not trained. Please train first."
+    ],
+    "protocol_counts": {
+      "TCP": 80,
+      "UDP": 20
+    }
+  }
+]

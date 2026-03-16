@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Saved Captures | SafeWeb IDS{% endblock %}
+{% block content %}
+<h1 class="mb-4 text-center animate-slideUp cyber-title"><i class="fas fa-save me-2"></i>Saved Captures</h1>
+
+<div class="row mb-4 g-3 justify-content-center">
+    {% set cards = [('Total Captures',summary.total_captures,'primary'),('Total Size',summary.total_size,'info'),('Last Saved',summary.last_saved,'success')] %}
+    {% for title,val,color in cards %}
+    <div class="col-md-4">
+        <div class="card metric-card accent-{{color}} text-white shadow animate-fadeIn">
+            <div class="card-body text-center"><h5>{{title}}</h5><p class="display-6">{{val}}</p></div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<form method="get" class="row g-3 mb-4 align-items-end animate-fadeIn glass-panel p-3">
+    <div class="col-md-5">
+        <label for="filename_search" class="form-label">Filename</label>
+        <input type="text" class="form-control" name="filename_search" id="filename_search"
+               placeholder="e.g. capture_2024.pcap" value="{{ request.args.get('filename_search','') }}">
+    </div>
+    <div class="col-md-4">
+        <label for="date_search" class="form-label">Date</label>
+        <input type="date" class="form-control" name="date_search" id="date_search"
+               value="{{ request.args.get('date_search','') }}">
+    </div>
+    <div class="col-md-3 d-grid">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i>Filter</button>
+    </div>
+</form>
+
+<div class="card shadow animate-slideUp glass-panel">
+    <div class="card-body">
+        <h4 class="card-title mb-3 text-center"><i class="fas fa-table me-2"></i>Capture List</h4>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr><th>Filename</th><th>Date</th><th>Size</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for c in captures %}
+                    <tr class="animate__animated animate__fadeIn" style="animation-delay:{{ loop.index0 * 0.05 }}s;">
+                        <td class="text-break">{{ c.filename }}</td>
+                        <td>{{ c.date }}</td>
+                        <td>{{ c.size }}</td>
+                        <td>
+                            <a href="{{ url_for('download_capture', filename=c.filename) }}"
+                               class="btn btn-sm btn-outline-success me-2"><i class="fas fa-download"></i></a>
+                            <form method="post" action="{{ url_for('delete_capture', filename=c.filename) }}" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Delete {{c.filename}}?')"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center">No captures</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+
+Flask>=3.0.0
+Flask-Login
+Flask-WTF
+Flask-Limiter
+Authlib
+pandas
+scikit-learn
+joblib
+mitmproxy
+scapy
+psutil>=5.9.0
+pytest>=7.0.0
+colorama>=0.4.6
+requests>=2.31.0
