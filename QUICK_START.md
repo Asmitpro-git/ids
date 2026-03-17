@@ -58,15 +58,9 @@ The IDS logs everything to the terminal. Look for:
 
 ## 🔍 Detected Threats
 
-The IDS automatically detects:
-- DDoS attacks
-- Port scanning
-- SQL injection
-- XSS attempts
-- Buffer overflows
-- Brute force attacks
-- Malware indicators
-- ML-detected anomalies
+The IDS now focuses on:
+- DoS / DDoS-style high-volume attacks (rule-based threshold)
+- ML-detected anomalies (optional)
 
 ## ⚙️ Configure Settings
 

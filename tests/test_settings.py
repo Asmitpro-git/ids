@@ -6,7 +6,7 @@ from flask_app import load_settings, save_settings, SETTINGS_FILE
 def test_settings_persistence(tmp_path):
     test_file = tmp_path / 'settings.json'
     settings = {
-        'thresholds': {'ddos_packet_count': 100, 'port_scan_ports': 10, 'brute_force_post_count': 5},
+        'thresholds': {'ddos_packet_count': 100},
         'notification_email': 'test@example.com',
         'ml_model': 'isolation_forest'
     }

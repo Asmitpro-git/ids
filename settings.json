@@ -1,11 +1,7 @@
 {
   "thresholds": {
-    "ddos_packet_count": 50,
-    "port_scan_ports": 10,
-    "brute_force_post_count": 5,
-    "buffer_overflow_packet_size": 1500,
-    "ping_of_death_packet_size": 65535
+    "ddos_packet_count": 100
   },
-  "notification_email": "admin@example.com",
+  "notification_email": "test@example.com",
   "ml_model": "isolation_forest"
 }

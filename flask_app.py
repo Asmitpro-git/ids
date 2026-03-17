@@ -757,7 +757,7 @@ def saved_captures():
 # Settings persistence and validation
 import json
 import re
-from backend.config import THRESHOLDS, SUSPICIOUS_DOMAINS
+from backend.config import THRESHOLDS
 
 SETTINGS_FILE = os.path.join(os.path.dirname(__file__), 'settings.json')
 
@@ -821,8 +821,8 @@ def settings():
             # Placeholder for retraining logic
             flash('Retraining ML model... (not implemented)', 'info')
         else:
-            # Validate and update thresholds
-            for key in ['ddos_packet_count', 'port_scan_ports', 'brute_force_post_count']:
+            # Validate and update thresholds (DoS/DDoS only)
+            for key in ['ddos_packet_count']:
                 value = request.form.get(key, settings_state['thresholds'][key])
                 try:
                     value = int(value)
@@ -857,7 +857,6 @@ def settings():
     return render_template(
         'settings.html',
         thresholds=settings_state['thresholds'],
-        suspicious_domains=SUSPICIOUS_DOMAINS,
         ml_model_status=get_ml_model_status(),
         notification_email=settings_state['notification_email'],
         ml_model=settings_state['ml_model']

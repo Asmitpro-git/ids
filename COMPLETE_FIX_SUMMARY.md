@@ -1,5 +1,7 @@
 # SafeWeb IDS - Complete Fix Summary
 
+> **Current scope:** The IDS now focuses on DoS/DDoS-style high-volume detection (with optional ML anomalies). Legacy signatures for other attack types have been removed per latest requirement.
+
 ## Issues Fixed
 
 ### 1. ✅ Packet Capture Not Working
@@ -41,11 +43,8 @@
 - Updates dashboard live while capturing
 
 ### ✅ Analysis Integration
-- **Rule-Based Detection**: Scans for 9 attack types
-  - DDoS, Port Scans, SQL Injection, XSS
-  - Buffer Overflow, Ping of Death
-  - Brute Force, Malware indicators
-- **ML-Based Detection**: Isolation Forest anomaly detection
+- **Rule-Based Detection**: Focused on DoS/DDoS-style high packet volume
+- **ML-Based Detection**: Isolation Forest anomaly detection (optionally Random Forest)
 - Both analyses run automatically on captured packets
 
 ### ✅ Dashboard Auto-Updates
@@ -166,19 +165,11 @@ Total: 5/5 tests passed ✓
 
 ### Detection Methods
 
-1. **Rule-Based (9 Attack Types)**
-   - DDoS: High packet rates
-   - Port Scanning: Multiple port attempts
-   - SQL Injection: SQL keywords in payloads
-   - XSS: Script tags in content
-   - Buffer Overflow: Packets >1500 bytes
-   - Ping of Death: ICMP >65535 bytes
-   - Brute Force: Repeated POST attempts
-   - Malware: Suspicious domains
-   - Suspicious Protocols: Non-standard protocols
+1. **Rule-Based (DoS/DDoS focus)**
+   - High packet rates per source IP (DoS/DDoS indicator)
 
 2. **Machine Learning**
-   - Isolation Forest algorithm
+   - Isolation Forest (and optional Random Forest)
    - Detects anomalies in traffic patterns
    - Analyzes: protocol, packet size, byte counts
    - Configurable contamination rate

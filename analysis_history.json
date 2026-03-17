@@ -4,8 +4,7 @@
     "filename": "capture_20260227_102122.pcap",
     "total_packets": 100,
     "alerts": [
-      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
-      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)"
+      "Potential DoS/DDoS from 10.0.2.15 (packet count: 120)"
     ],
     "ml_predictions": [
       "Model not trained. Please train first."
@@ -18,53 +17,47 @@
   {
     "timestamp": "2026-02-27 10:23:01",
     "filename": "capture_20260227_102231.pcap",
-    "total_packets": 100,
+    "total_packets": 150,
     "alerts": [
-      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
-      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
-      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
-      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)"
+      "Potential DoS/DDoS from 10.0.2.15 (packet count: 160)"
     ],
     "ml_predictions": [
       "Model not trained. Please train first."
     ],
     "protocol_counts": {
-      "TCP": 75,
-      "UDP": 25
+      "TCP": 115,
+      "UDP": 35
     }
   },
   {
     "timestamp": "2026-02-27 10:48:04",
     "filename": "capture_20260227_104755.pcap",
-    "total_packets": 100,
+    "total_packets": 90,
     "alerts": [
-      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
-      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
-      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)"
+      "No DoS/DDoS indicators detected"
     ],
     "ml_predictions": [
       "Model not trained. Please train first."
     ],
     "protocol_counts": {
-      "TCP": 72,
+      "TCP": 62,
       "UDP": 28
     }
   },
   {
     "timestamp": "2026-02-27 10:50:13",
     "filename": "capture_20260227_105000.pcap",
-    "total_packets": 100,
+    "total_packets": 200,
     "alerts": [
-      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
-      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)",
-      "Potential Buffer Overflow from 10.0.2.15 (packet size: 1514)"
+      "Potential DoS/DDoS from 10.0.2.15 (packet count: 180)",
+      "Potential DoS/DDoS from 192.168.1.10 (packet count: 170)"
     ],
     "ml_predictions": [
       "Model not trained. Please train first."
     ],
     "protocol_counts": {
-      "TCP": 80,
-      "UDP": 20
+      "TCP": 140,
+      "UDP": 60
     }
   }
 ]

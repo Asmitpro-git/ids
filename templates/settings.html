@@ -5,8 +5,7 @@
 
 <div class="row mb-4 g-3 justify-content-center">
     {% set cards = [
-        ('IDS Thresholds', f"DDoS: {thresholds.ddos_packet_count}<br>Port Scan: {thresholds.port_scan_ports}<br>Brute Force: {thresholds.brute_force_post_count}", 'primary'),
-        ('Suspicious Domains', f"{suspicious_domains|length} domain(s)", 'info'),
+        ('DoS / DDoS Threshold', f"Packet count: {thresholds.ddos_packet_count}", 'primary'),
         ('ML Model', ml_model_status, 'success')
     ] %}
     {% for title, body, color in cards %}
@@ -24,19 +23,9 @@
         <form method="post" class="row g-3" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="col-md-4">
-                <label class="form-label">DDoS Packets</label>
+                <label class="form-label">DoS/DDoS packet threshold</label>
                 <input type="number" class="form-control" name="ddos_packet_count"
                        value="{{ thresholds.ddos_packet_count }}" min="1">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Port Scan Ports</label>
-                <input type="number" class="form-control" name="port_scan_ports"
-                       value="{{ thresholds.port_scan_ports }}" min="1">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Brute-Force POSTs</label>
-                <input type="number" class="form-control" name="brute_force_post_count"
-                       value="{{ thresholds.brute_force_post_count }}" min="1">
             </div>
 
             <div class="col-md-6">

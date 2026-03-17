@@ -1,5 +1,7 @@
 # SafeWeb IDS - Fixes and Improvements Applied
 
+> **Note:** Detection scope is now intentionally narrowed to DoS/DDoS-style volume attacks (plus optional ML anomalies). Previous signature-based checks for other attack types have been removed.
+
 ## Overview
 Your IDS has been comprehensively reviewed and fixed to work like a real intrusion detection system.
 
@@ -47,19 +49,11 @@ Your IDS has been comprehensively reviewed and fixed to work like a real intrusi
 ### Detection Methods
 
 #### 1. Rule-Based Detection
-Your IDS now detects:
-- **DDoS Attacks**: High packet rates from single sources
-- **Port Scanning**: Multiple port connection attempts
-- **SQL Injection**: SQL keywords in HTTP payloads
-- **XSS Attacks**: Script injection attempts
-- **Buffer Overflow**: Oversized packets (>1500 bytes)
-- **Ping of Death**: Oversized ICMP packets
-- **Brute Force**: Repeated HTTP POST attempts
-- **Malware Indicators**: Suspicious domains in URLs
+Your IDS now focuses on **DoS/DDoS-style high-volume attacks** (single-source packet count threshold).
 
 #### 2. Machine Learning Detection
-- Uses Isolation Forest algorithm
-- Detects anomalies in network traffic patterns
+- Uses Isolation Forest (and optional Random Forest) anomaly detection
+- Detects outliers in network traffic patterns beyond the DoS/DDoS rule
 - Can be trained on custom datasets
 - Analyzes protocol, packet size, and traffic patterns
 
@@ -140,11 +134,7 @@ Go to Settings page to:
    - Interface detection
 
 3. **backend/analysis.py**: Rule-based detection
-   - DDoS detection
-   - Port scan detection
-   - SQL injection detection
-   - Buffer overflow detection
-   - And more...
+   - DoS/DDoS volume detection
 
 4. **backend/ml_model.py**: ML detection
    - Isolation Forest model
@@ -152,8 +142,7 @@ Go to Settings page to:
    - Feature alignment
 
 5. **backend/config.py**: Configuration
-   - Detection thresholds
-   - Suspicious domains list
+   - Detection thresholds (DoS/DDoS)
 
 6. **backend/users.py**: User management
    - Authentication
@@ -173,7 +162,7 @@ Go to Settings page to:
 
 The IDS has been tested for:
 ✓ Interface detection: Working
-✓ Rule-based analysis: Working (tested with buffer overflow detection)
+✓ Rule-based analysis: Working (DoS/DDoS thresholding)
 ✓ User management: Working
 ✓ File persistence: Working
 
