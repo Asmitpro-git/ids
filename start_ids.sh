@@ -8,7 +8,7 @@ echo "==================================="
 echo ""
 
 # Check if running as root
-if [ "$EUID" -ne 0 ]; then 
+if [ "$EUID" != "0" ]; then 
     echo "⚠️  WARNING: Not running as root!"
     echo "   Packet capture will not work without sudo privileges."
     echo "   Please run: sudo $0"
